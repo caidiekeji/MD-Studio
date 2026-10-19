@@ -1,0 +1,324 @@
+/* MDE Desktop — 应用层样式（浅色/深色，纯色，无渐变） */
+:root, body[data-theme="light"] {
+  --app-bg: #ffffff;
+  --app-bg2: #f6f8fa;
+  --app-bg3: #eaeef2;
+  --app-text: #1f2328;
+  --app-text2: #656d76;
+  --app-text3: #8b949e;
+  --app-border: #d8dee4;
+  --app-accent: #0969da;
+  --app-accent-bg: #ddf4ff;
+}
+body[data-theme="dark"] {
+  --app-bg: #0d1117;
+  --app-bg2: #161b22;
+  --app-bg3: #21262d;
+  --app-text: #e6edf3;
+  --app-text2: #8b949e;
+  --app-text3: #6e7681;
+  --app-border: #30363d;
+  --app-accent: #58a6ff;
+  --app-accent-bg: #1f3a5f;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--app-bg);
+  color: var(--app-text);
+  overflow: hidden;
+}
+
+#app { display: flex; flex-direction: column; height: 100vh; }
+
+/* ---------- 顶部工具栏 ---------- */
+#appbar {
+  flex-shrink: 0;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  background: var(--app-bg2);
+  border-bottom: 1px solid var(--app-border);
+  user-select: none;
+}
+.app-logo { display: flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 600; margin-right: 6px; }
+.app-actions { display: flex; align-items: center; gap: 2px; }
+.vsep { width: 1px; height: 18px; background: var(--app-border); margin: 0 5px; }
+.app-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  color: var(--app-text2);
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0;
+  transition: background .12s, color .12s;
+}
+.app-btn:hover { background: var(--app-bg3); color: var(--app-text); }
+.app-btn:active { transform: scale(.94); }
+.app-btn svg { display: block; }
+.file-label {
+  font-size: 12.5px;
+  color: var(--app-text3);
+  max-width: 340px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-left: 6px;
+}
+.spacer { flex: 1; }
+
+/* ---------- 下拉菜单 ---------- */
+.menu-wrap { position: relative; }
+.menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 200;
+  min-width: 180px;
+  background: var(--app-bg);
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  padding: 4px;
+  display: none;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.menu.open { display: block; }
+.menu-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--app-text3);
+  padding: 6px 10px 3px;
+}
+.menu-item {
+  display: block;
+  width: 100%;
+  padding: 7px 12px;
+  border: none;
+  background: transparent;
+  color: var(--app-text);
+  font-size: 13px;
+  font-family: inherit;
+  text-align: left;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.menu-item:hover { background: var(--app-bg3); }
+.menu-item.muted { color: var(--app-text3); font-size: 12px; }
+.menu-empty { padding: 10px; text-align: center; color: var(--app-text3); font-size: 12px; }
+
+/* ---------- 主区域 ---------- */
+#mainArea { flex: 1; display: flex; min-height: 0; position: relative; }
+#editorHost { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+#editorHost > .mde-root { flex: 1; }
+
+/* 内置侧栏改造为双 Tab */
+.mde-sidebar { width: 250px; }
+.side-tabs {
+  flex-shrink: 0;
+  display: flex;
+  gap: 2px;
+  padding: 8px 8px 4px;
+}
+.side-tab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--app-text3);
+  font-size: 12.5px;
+  font-family: inherit;
+  font-weight: 600;
+  padding: 5px 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.side-tab:hover { background: var(--app-bg3); color: var(--app-text); }
+.side-tab.active { background: var(--app-accent-bg); color: var(--app-accent); }
+.side-panel { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 8px 16px; }
+.side-panel.hidden { display: none; }
+
+/* 文件树 */
+.tree-empty { font-size: 12.5px; color: var(--app-text3); padding: 18px 10px; text-align: center; line-height: 1.7; }
+.tree-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px 8px;
+}
+.tree-root {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--app-text2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tree-refresh {
+  border: none;
+  background: transparent;
+  color: var(--app-text3);
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 4px;
+  display: inline-flex;
+}
+.tree-refresh:hover { background: var(--app-bg3); color: var(--app-text); }
+.tree-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 13px;
+  color: var(--app-text2);
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.tree-row:hover { background: var(--app-bg3); color: var(--app-text); }
+.tree-row.is-dir { font-weight: 500; color: var(--app-text); }
+.tree-chev { flex-shrink: 0; display: inline-flex; color: var(--app-text3); }
+.tree-name { overflow: hidden; text-overflow: ellipsis; }
+
+/* 大纲 */
+.outline-item {
+  padding: 5px 8px;
+  font-size: 13px;
+  color: var(--app-text2);
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.outline-item:hover { background: var(--app-bg3); color: var(--app-text); }
+
+/* ---------- 源码模式 ---------- */
+#sourceArea {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13.5px;
+  line-height: 1.7;
+  padding: 24px 32px;
+  border: none;
+  outline: none;
+  resize: none;
+  background: var(--app-bg);
+  color: var(--app-text);
+}
+#sourceArea.hidden { display: none; }
+
+/* ---------- 查找替换栏 ---------- */
+#findBar {
+  position: absolute;
+  top: 10px;
+  right: 22px;
+  z-index: 40;
+  background: var(--app-bg);
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .1);
+}
+#findBar.hidden { display: none; }
+#findBar:not(.with-replace) .replace-row { display: none; }
+.find-row { display: flex; align-items: center; gap: 4px; }
+.find-row input {
+  width: 200px;
+  padding: 5px 9px;
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
+  background: var(--app-bg2);
+  color: var(--app-text);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+}
+.find-row input:focus { border-color: var(--app-accent); }
+.find-btn {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--app-text2);
+  font-size: 13px;
+  font-family: inherit;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 4px 8px;
+  min-width: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.find-btn:hover { background: var(--app-bg3); color: var(--app-text); }
+.find-btn.active { background: var(--app-accent-bg); color: var(--app-accent); }
+.find-btn.text { border-color: var(--app-border); }
+.find-status { font-size: 12px; color: var(--app-text3); min-width: 52px; text-align: center; }
+.find-status.none { color: var(--app-text3); }
+
+/* ---------- 表格浮动工具条 ---------- */
+#tableBar {
+  position: absolute;
+  z-index: 35;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--app-bg);
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  padding: 3px 5px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .1);
+}
+#tableBar.hidden { display: none; }
+#tableBar .vsep { height: 16px; }
+
+/* ---------- Toast ---------- */
+#appToast {
+  position: fixed;
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: #333;
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 13px;
+  opacity: 0;
+  pointer-events: none;
+  transition: all .2s;
+  z-index: 500;
+}
+#appToast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ---------- 打印（导出 PDF） ---------- */
+@media print {
+  #appbar, .mde-toolbar, .mde-statusbar, #findBar, #tableBar, #sourceArea, #appToast { display: none !important; }
+  #app, #mainArea, #editorHost { display: block !important; height: auto !important; overflow: visible !important; }
+  .mde-scroll { overflow: visible !important; }
+  .mde-editor { max-width: 100% !important; padding: 0 !important; }
+  .mde-root { height: auto !important; }
+}
+
+/* ---------- 窄屏 ---------- */
+@media (max-width: 900px) {
+  .file-label { display: none; }
+  .mde-sidebar { width: 200px; }
+}

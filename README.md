@@ -1,6 +1,6 @@
 # MD Editor Desktop
 
-所见即所得（WYSIWYG）Markdown 桌面编辑器，对标 Typora 核心体验，基于 Tauri 2，安装包约 **3~6 MB**。
+所见即所得（WYSIWYG）Markdown 桌面编辑器，基于 Tauri 2，安装包约 **3~6 MB**。
 
 ## 架构
 
@@ -14,7 +14,7 @@
 └─ .github/workflows/    CI 多平台构建（Windows / macOS / Linux）
 ```
 
-## 功能清单（对标 Typora）
+## 功能清单
 
 | 功能 | 说明 |
 | --- | --- |
@@ -57,4 +57,4 @@ cd src-tauri && cargo tauri dev
 
 - 撤销/重做依赖 `execCommand`（块级结构变更后可能丢撤销栈），后续版本自建 undo 栈
 - 数学公式（KaTeX）/ Mermaid 图表为下一迭代项
-- 解析器为自研轻量实现，极复杂的嵌套 Markdown 还原度略低于 Typora
+- 解析器为自研轻量实现，极复杂的嵌套 Markdown（多级列表、引用内代码块）还原度仍在持续改进

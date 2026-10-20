@@ -20,7 +20,14 @@ var APP_I18N = {
     confirmNew: '当前文档有未保存的修改，确定新建？',
     confirmClose: '文档有未保存的修改，仍要退出？',
     saveFailed: '保存失败：', exported: '已导出', imgSaved: '图片已插入',
-    untitled: '未命名', clearRecent: '清空最近记录', sourceHint: '编辑 Markdown 源码，关闭时应用修改'
+    untitled: '未命名', clearRecent: '清空最近记录', sourceHint: '编辑 Markdown 源码，关闭时应用修改',
+    menuFile: '文件(F)', menuEdit: '编辑(E)', menuFormat: '格式(O)', menuView: '视图(V)', menuHelp: '帮助(H)',
+    recentFiles: '最近文件', mUndo: '撤销', mRedo: '重做', selectAll: '全选',
+    fmtBold: '加粗', fmtItalic: '斜体', fmtStrike: '删除线', fmtInlineCode: '行内代码',
+    heading: '标题', mBody: '正文', mUl: '无序列表', mOl: '有序列表', mTask: '任务列表',
+    mQuote: '引用', mCodeBlock: '代码块', mHr: '分隔线', mLink: '链接', mImage: '图片', mTable: '表格',
+    mSidebar: '显示/隐藏侧栏', appearance: '外观', shortcuts: '快捷键列表',
+    about: '关于 MD Editor', aboutTitle: '关于', shortcutsTitle: '快捷键列表'
   },
   en: {
     appName: 'MD Editor', newDoc: 'New', openFile: 'Open File', openFolder: 'Open Folder',
@@ -34,7 +41,14 @@ var APP_I18N = {
     confirmNew: 'Unsaved changes. Create new document anyway?',
     confirmClose: 'Unsaved changes. Quit anyway?',
     saveFailed: 'Save failed: ', exported: 'Exported', imgSaved: 'Image inserted',
-    untitled: 'Untitled', clearRecent: 'Clear recent', sourceHint: 'Edit Markdown source; changes apply on close'
+    untitled: 'Untitled', clearRecent: 'Clear recent', sourceHint: 'Edit Markdown source; changes apply on close',
+    menuFile: 'File(F)', menuEdit: 'Edit(E)', menuFormat: 'Format(O)', menuView: 'View(V)', menuHelp: 'Help(H)',
+    recentFiles: 'Recent Files', mUndo: 'Undo', mRedo: 'Redo', selectAll: 'Select All',
+    fmtBold: 'Bold', fmtItalic: 'Italic', fmtStrike: 'Strikethrough', fmtInlineCode: 'Inline Code',
+    heading: 'Heading', mBody: 'Body Text', mUl: 'Bullet List', mOl: 'Numbered List', mTask: 'Task List',
+    mQuote: 'Quote', mCodeBlock: 'Code Block', mHr: 'Divider', mLink: 'Link', mImage: 'Image', mTable: 'Table',
+    mSidebar: 'Toggle Sidebar', appearance: 'Appearance', shortcuts: 'Keyboard Shortcuts',
+    about: 'About MD Editor', aboutTitle: 'About', shortcutsTitle: 'Keyboard Shortcuts'
   }
 };
 function T(key) {
@@ -274,6 +288,10 @@ var editor = MDE.create(editorHost, {
   }
 });
 var editorEl = editor.editorEl;
+
+/* 自建撤销/重做栈 + 数学公式/Mermaid 增强 */
+var undoApi = MDEUndo.attach(editor);
+var richApi = MDERich.attach(editor);
 
 /* 劫持内置侧栏 → 文件 / 大纲 双 Tab */
 (function hijackSidebar() {
@@ -781,9 +799,17 @@ function closeMenus(except) {
   document.querySelectorAll('.menu.open').forEach(function (m) {
     if (m !== except) m.classList.remove('open');
   });
+  syncMenuRoots();
+}
+/* 下拉开合状态 → 菜单根标题高亮同步 */
+function syncMenuRoots() {
+  document.querySelectorAll('.menu-root').forEach(function (r) {
+    var dd = r.querySelector('.menu.dropdown');
+    r.classList.toggle('open', !!(dd && dd.classList.contains('open')));
+  });
 }
 document.addEventListener('click', function (e) {
-  if (!e.target.closest('.menu-wrap')) closeMenus();
+  if (!e.target.closest('.menu-wrap') && !e.target.closest('.menu-root')) closeMenus();
 });
 
 function toggleMenu(id) {
@@ -791,20 +817,25 @@ function toggleMenu(id) {
   var open = m.classList.contains('open');
   closeMenus();
   m.classList.toggle('open', !open);
+  syncMenuRoots();
 }
 
-function renderRecentMenu() {
+function recentMenuHtml() {
   var list = recentStore.load();
-  var menu = $('#recentMenu');
-  var html = list.length ? list.map(function (r) {
+  return list.length ? list.map(function (r) {
     return '<button type="button" class="menu-item" data-recent="' + Core.escapeHtml(r.path) + '" title="' +
       Core.escapeHtml(r.path) + '">' + Core.escapeHtml(r.name) + '</button>';
   }).join('') + '<button type="button" class="menu-item muted" data-act="clear-recent">' + T('clearRecent') + '</button>'
     : '<div class="menu-empty">—</div>';
-  menu.innerHTML = html;
+}
+function renderRecentMenu() {
+  var html = recentMenuHtml();
+  $('#recentMenu').innerHTML = html;
+  var mr = $('#menuRecent');
+  if (mr) mr.innerHTML = html;
 }
 
-$('#recentMenu').addEventListener('click', function (e) {
+function onRecentMenuClick(e) {
   var item = e.target.closest('[data-recent]');
   if (item) {
     closeMenus();
@@ -825,7 +856,10 @@ $('#recentMenu').addEventListener('click', function (e) {
     renderRecentMenu();
     closeMenus();
   }
-});
+}
+$('#recentMenu').addEventListener('click', onRecentMenuClick);
+var menuRecentEl = $('#menuRecent');
+if (menuRecentEl) menuRecentEl.addEventListener('click', onRecentMenuClick);
 
 function applySettings() {
   settingsStore.save(settings);
@@ -857,16 +891,29 @@ var APP_BTN_ICONS = {
   'find': 'search', 'source': 'code', 'recent-menu': 'clock', 'settings-menu': 'sliders'
 };
 function injectAppIcons() {
-  document.querySelectorAll('#appbar [data-app]').forEach(function (b) {
+  /* 只注入图标按钮（.app-btn），菜单项保持纯文字 */
+  document.querySelectorAll('#appbar [data-app], #menubar .app-btn[data-app]').forEach(function (b) {
     var name = APP_BTN_ICONS[b.dataset.app];
     if (name) b.innerHTML = aIcon(name, 16);
   });
+  var mc = document.querySelector('#appModal .modal-close');
+  if (mc) mc.innerHTML = aIcon('x', 15);
 }
 
-/* 工具栏点击 */
-$('#appbar').addEventListener('click', function (e) {
+/* 全局动作派发：工具栏 / 菜单栏统一入口 */
+document.addEventListener('click', function (e) {
+  var inDropdown = !!e.target.closest('.menu.dropdown');
+  var setBtn = e.target.closest('[data-set]');
+  if (setBtn && !e.target.closest('#settingsMenu')) {
+    var kv = setBtn.dataset.set.split(':');
+    settings[kv[0]] = kv[1];
+    applySettings();
+    if (inDropdown) closeMenus();
+    return;
+  }
   var btn = e.target.closest('[data-app]');
   if (!btn) return;
+  if (inDropdown) closeMenus();
   var act = btn.dataset.app;
   switch (act) {
     case 'new': doNewDoc(); break;
@@ -891,6 +938,206 @@ $('#settingsMenu').addEventListener('click', function (e) {
   applySettings();
   closeMenus();
 });
+
+/* ============================================================
+ * 15.5 菜单栏系统（标准桌面软件：开合 / 悬停切换 / Alt 热键 /
+ *      方向键导航 / 状态刷新 / 格式转发 / 模态框）
+ * ============================================================ */
+function menuRootOf(dd) { return dd.closest ? dd.closest('.menu-root') : null; }
+
+function openMenuDropdown(dd) {
+  closeMenus(dd);
+  dd.classList.add('open');
+  syncMenuRoots();
+  refreshMenuStates();
+  clearMenuFocus();
+}
+function toggleMenuRoot(root) {
+  var dd = root.querySelector('.menu.dropdown');
+  if (!dd) return;
+  if (dd.classList.contains('open')) closeMenus();
+  else openMenuDropdown(dd);
+}
+function closeAllMenuRoots() { closeMenus(); }
+
+function refreshMenuStates() {
+  /* 撤销/重做禁用态 */
+  document.querySelectorAll('[data-mstate]').forEach(function (item) {
+    var ok = item.dataset.mstate === 'undo' ? undoApi.canUndo() : undoApi.canRedo();
+    item.classList.toggle('disabled', !ok);
+    item.setAttribute('aria-disabled', ok ? 'false' : 'true');
+  });
+  /* 主题/语言勾选态 */
+  document.querySelectorAll('[data-set]').forEach(function (item) {
+    var kv = item.dataset.set.split(':');
+    var on = settings[kv[0]] === kv[1];
+    var mark = item.querySelector('.check');
+    if (on && !mark) {
+      mark = document.createElement('span');
+      mark.className = 'check';
+      mark.textContent = '✓';
+      item.insertBefore(mark, item.firstChild);
+    } else if (!on && mark) {
+      mark.parentNode.removeChild(mark);
+    }
+  });
+}
+
+/* ---- 格式菜单 → 转发编辑器内置格式按钮（按钮在 DOM 中但不可见也能触发） ---- */
+function fwdEditorAction(action) {
+  var btn = document.querySelector('#editorHost .mde-btn[data-action="' + action + '"]');
+  if (btn) btn.click();
+}
+function fwdHeading(level) {
+  var btn = document.querySelector('#editorHost .mde-dd-menu [data-heading="' + level + '"]');
+  if (btn) btn.click();
+}
+
+/* ---- 模态框 ---- */
+function showModal(title, html) {
+  $('#modalTitle').textContent = title;
+  $('#modalBody').innerHTML = html;
+  $('#appModal').classList.remove('hidden');
+}
+function closeModal() { $('#appModal').classList.add('hidden'); }
+function isModalOpen() { return !$('#appModal').classList.contains('hidden'); }
+
+function showShortcuts() {
+  var rows = [
+    ['Ctrl+N / Ctrl+O / Ctrl+Shift+O', T('newDoc') + ' / ' + T('openFile') + ' / ' + T('openFolder')],
+    ['Ctrl+S / Ctrl+Shift+S', T('save') + ' / ' + T('saveAs')],
+    ['Ctrl+F / Ctrl+H', T('find') + ' / ' + T('replace')],
+    ['Ctrl+/', T('source')],
+    ['Ctrl+Z / Ctrl+Y', T('mUndo') + ' / ' + T('mRedo')],
+    ['Ctrl+B / Ctrl+I / Ctrl+K', T('fmtBold') + ' / ' + T('fmtItalic') + ' / ' + T('mLink')],
+    ['Ctrl+1 … Ctrl+6 / Ctrl+0', T('heading') + ' / ' + T('mBody')],
+    ['Ctrl+Shift+7 / 8 / 9', T('mUl') + ' / ' + T('mOl') + ' / ' + T('mTask')],
+    ['Alt+F/E/O/V/H', T('menuFile') + ' ' + T('menuEdit') + ' ' + T('menuFormat') + ' ' + T('menuView') + ' ' + T('menuHelp')]
+  ];
+  var html = '<table class="sc-table"><tbody>' + rows.map(function (r) {
+    return '<tr><td><kbd>' + r[0] + '</kbd></td><td>' + Core.escapeHtml(r[1]) + '</td></tr>';
+  }).join('') + '</tbody></table>';
+  showModal(T('shortcutsTitle'), html);
+}
+function showAbout() {
+  var html =
+    '<div class="about-logo">' +
+    '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#0969da" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v13"/><path d="M7 9h5"/><path d="M7 13h7"/><path d="M7 17h4"/></svg>' +
+    'MD Editor</div>' +
+    '<div class="about-meta">v1.1.0 · ' + (state.mode === 'tauri' ? 'Desktop (Tauri 2)' : 'Web Preview') + '<br>' +
+    'WYSIWYG Markdown 编辑器 · MIT License</div>';
+  showModal(T('aboutTitle'), html);
+}
+document.querySelectorAll('#appModal [data-mclose]').forEach(function (el) {
+  el.addEventListener('click', closeModal);
+});
+
+/* ---- 菜单栏事件 ---- */
+var menuBarEl = $('#menuBar');
+menuBarEl.addEventListener('click', function (e) {
+  var title = e.target.closest('.menu-title');
+  if (title) { toggleMenuRoot(title.closest('.menu-root')); return; }
+  /* 菜单项动作 */
+  var item = e.target.closest('.menu-item');
+  if (!item) return;
+  if (item.classList.contains('disabled')) return;
+  var fwd = item.dataset.efwd;
+  if (fwd) { closeMenus(); fwdEditorAction(fwd); return; }
+  var fwdh = item.dataset.efwdh;
+  if (fwdh != null && fwdh !== '') { closeMenus(); fwdHeading(fwdh); return; }
+  var mact = item.dataset.mact;
+  if (mact) {
+    closeMenus();
+    if (mact === 'replace') findBarShow(true);
+    else if (mact === 'select-all') {
+      editor.focus();
+      try {
+        var r = document.createRange();
+        r.selectNodeContents(editorEl);
+        var sel = window.getSelection();
+        sel.removeAllRanges(); sel.addRange(r);
+      } catch (err) {}
+    }
+    else if (mact === 'shortcuts') showShortcuts();
+    else if (mact === 'about') showAbout();
+  }
+  /* data-app / data-set 由全局派发器处理，这里确保下拉收起 */
+  if (item.dataset.app || item.dataset.set) closeMenus();
+});
+
+/* 悬停切换：菜单已展开时 hover 其他根标题直接切换（专业菜单行为） */
+menuBarEl.addEventListener('mouseover', function (e) {
+  var title = e.target.closest('.menu-title');
+  if (!title) return;
+  if (!document.querySelector('.menu.dropdown.open')) return;
+  openMenuDropdown(title.closest('.menu-root').querySelector('.menu.dropdown'));
+});
+
+/* 方向键导航 + Esc + Alt 热键 */
+function openDropdownOfKey(k) {
+  return document.querySelector('.menu-root[data-mkey="' + k + '"] .menu.dropdown');
+}
+function menuVisibleItems(dd) {
+  return Array.prototype.filter.call(dd.querySelectorAll('.menu-item'), function (i) {
+    return !i.classList.contains('disabled');
+  });
+}
+function clearMenuFocus() {
+  document.querySelectorAll('.menu-item.mfocus').forEach(function (i) { i.classList.remove('mfocus'); });
+}
+function moveMenuFocus(dd, delta) {
+  var items = menuVisibleItems(dd);
+  if (!items.length) return;
+  var cur = dd.querySelector('.menu-item.mfocus');
+  var idx = items.indexOf(cur);
+  idx = idx < 0 ? (delta > 0 ? 0 : items.length - 1) : (idx + delta + items.length) % items.length;
+  clearMenuFocus();
+  items[idx].classList.add('mfocus');
+  try { items[idx].scrollIntoView({ block: 'nearest' }); } catch (err) {}
+}
+document.addEventListener('keydown', function (e) {
+  /* Esc：先关模态，再关菜单 */
+  if (e.key === 'Escape') {
+    if (isModalOpen()) { closeModal(); return; }
+    var open = document.querySelector('.menu.dropdown.open');
+    if (open) {
+      var root = menuRootOf(open);
+      closeAllMenuRoots();
+      if (root) root.querySelector('.menu-title').focus();
+      e.preventDefault(); e.stopPropagation();
+    }
+    return;
+  }
+  /* Alt+字母 打开菜单（标准桌面软件热键） */
+  if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+    var k = (e.key || '').toLowerCase();
+    var dd = openDropdownOfKey(k);
+    if (dd) {
+      e.preventDefault();
+      var root2 = menuRootOf(dd);
+      if (root2.classList.contains('open')) closeAllMenuRoots();
+      else openMenuDropdown(dd);
+      return;
+    }
+  }
+  /* 展开态下的方向键 / Enter */
+  var openDd = document.querySelector('.menu.dropdown.open');
+  if (!openDd) return;
+  if (e.key === 'ArrowDown') { e.preventDefault(); moveMenuFocus(openDd, 1); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); moveMenuFocus(openDd, -1); }
+  else if (e.key === 'Enter' || e.key === ' ') {
+    var focusItem = openDd.querySelector('.menu-item.mfocus');
+    if (focusItem && e.key === 'Enter') { e.preventDefault(); focusItem.click(); }
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    e.preventDefault();
+    var roots = Array.prototype.slice.call(document.querySelectorAll('.menu-root'));
+    var curRoot = menuRootOf(openDd);
+    var pos = roots.indexOf(curRoot);
+    var next = roots[(pos + (e.key === 'ArrowRight' ? 1 : -1) + roots.length) % roots.length];
+    openMenuDropdown(next.querySelector('.menu.dropdown'));
+    next.querySelector('.menu-title').focus();
+  }
+}, false);
 
 /* ============================================================
  * 15. 查找栏事件
@@ -949,10 +1196,11 @@ injectAppIcons();
 renderRecentMenu();
 renderFileTree();
 refreshOutline();
+refreshMenuStates();   // 菜单勾选/禁用初始态
 updateTitle();
 if (state.mode === 'browser') {
   // 浏览器演示：预置示例文档，便于验证功能闭环
-  editor.setMarkdown('# MD Editor\n\n这是一个 **所见即所得** Markdown 编辑器的浏览器演示模式。\n\n## 已实现的完整功能\n\n- 文件树与 `文件读写`\n- 图片粘贴到本地 assets\n- 查找与替换（Ctrl+F / Ctrl+H）\n- 源码模式（Ctrl+/）\n- 导出 HTML / PDF\n- 表格行列增删\n\n## 代码块\n\n```js\nfunction hello() {\n  console.log("hello desktop");\n}\n```\n\n## 表格\n\n| 功能 | 状态 |\n| --- | --- |\n| 文件树 | 已完成 |\n| 查找替换 | 已完成 |\n\n> 提示：桌面模式（Tauri）下所有文件操作直接读写磁盘。\n\n- [x] 编辑器核心\n- [ ] 打包发布\n\n---\n');
+  editor.setMarkdown('# MD Editor\n\n这是一个 **所见即所得** Markdown 编辑器的浏览器演示模式。\n\n## 已实现的完整功能\n\n- 文件树与 `文件读写`\n- 图片粘贴到本地 assets\n- 查找与替换（Ctrl+F / Ctrl+H）\n- 源码模式（Ctrl+/）\n- 导出 HTML / PDF\n- 表格行列增删\n- 数学公式与 Mermaid 图表\n- 自建撤销/重做栈\n\n## 数学公式（点击可编辑）\n\n质能方程 $E = mc^2$ 与勾股定理 $a^2 + b^2 = c^2$。\n\n$$\n\\int_{-\\infty}^{\\infty} e^{-x^2} \\, dx = \\sqrt{\\pi}\n$$\n\n## Mermaid 图表\n\n```mermaid\ngraph LR\n  A[Markdown] --> B[编辑器]\n  B --> C{桌面应用}\n  C -->|Tauri 2| D[3MB 安装包]\n```\n\n## 代码块\n\n```js\nfunction hello() {\n  console.log("hello desktop");\n}\n```\n\n## 嵌套列表\n\n- 第一层\n  - 第二层\n    - 第三层\n\n## 表格\n\n| 功能 | 状态 |\n| --- | --- |\n| 文件树 | 已完成 |\n| 查找替换 | 已完成 |\n\n> 提示：桌面模式（Tauri）下所有文件操作直接读写磁盘。\n\n- [x] 编辑器核心\n- [ ] 打包发布\n\n---\n');
   refreshOutline();  // onChange 有 120ms 防抖，初始大纲需立即刷新
 }
 
@@ -965,7 +1213,9 @@ window.__MDE_APP__ = {
   buildExportHtml: buildExportHtml,
   toggleSource: toggleSource,
   findBarShow: findBarShow,
-  runFind: runFind
+  runFind: runFind,
+  undo: undoApi,
+  rich: richApi
 };
 
 })();

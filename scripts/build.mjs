@@ -11,7 +11,7 @@ mkdirSync(join(dist, 'js'), { recursive: true });
 mkdirSync(join(dist, 'css'), { recursive: true });
 
 copyFileSync(join(root, 'index.html'), join(dist, 'index.html'));
-for (const f of ['md-editor.js', 'core.js', 'app.js']) {
+for (const f of ['md-editor.js', 'core.js', 'undo.js', 'rich.js', 'app.js']) {
   copyFileSync(join(root, 'js', f), join(dist, 'js', f));
 }
 copyFileSync(join(root, 'css', 'app.css'), join(dist, 'css', 'app.css'));

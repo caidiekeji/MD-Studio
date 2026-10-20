@@ -8,27 +8,105 @@
 </head>
 <body data-theme="light">
   <div id="app">
-    <header id="appbar">
+
+    <!-- ========== 菜单栏（标准桌面软件菜单体系） ========== -->
+    <header id="menubar">
       <div class="app-logo">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#0969da" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v13"/><path d="M7 9h5"/><path d="M7 13h7"/><path d="M7 17h4"/></svg>
         <span data-i18n="appName">MD Editor</span>
       </div>
 
-      <div class="app-actions">
-        <button type="button" class="app-btn" data-app="new" data-i18n-title="newDoc"></button>
-        <span class="vsep"></span>
-        <button type="button" class="app-btn" data-app="open-file" data-i18n-title="openFile"></button>
-        <button type="button" class="app-btn" data-app="open-folder" data-i18n-title="openFolder"></button>
-        <span class="vsep"></span>
-        <button type="button" class="app-btn" data-app="save" data-i18n-title="save"></button>
-        <button type="button" class="app-btn" data-app="save-as" data-i18n-title="saveAs"></button>
-        <span class="vsep"></span>
-        <button type="button" class="app-btn" data-app="export-html" data-i18n-title="exportHtml"></button>
-        <button type="button" class="app-btn" data-app="export-pdf" data-i18n-title="exportPdf"></button>
-        <span class="vsep"></span>
-        <button type="button" class="app-btn" data-app="find" data-i18n-title="find"></button>
-        <button type="button" class="app-btn" data-app="source" data-i18n-title="source"></button>
-      </div>
+      <nav class="menu-bar" id="menuBar">
+        <!-- 文件 -->
+        <div class="menu-root" data-mkey="f">
+          <button type="button" class="menu-title" data-i18n="menuFile">文件(F)</button>
+          <div class="menu dropdown" id="menuFile">
+            <button type="button" class="menu-item" data-app="new"><span data-i18n="newDoc">新建</span><kbd>Ctrl+N</kbd></button>
+            <button type="button" class="menu-item" data-app="open-file"><span data-i18n="openFile">打开…</span><kbd>Ctrl+O</kbd></button>
+            <button type="button" class="menu-item" data-app="open-folder"><span data-i18n="openFolder">打开文件夹…</span><kbd>Ctrl+Shift+O</kbd></button>
+            <div class="menu-sep"></div>
+            <button type="button" class="menu-item" data-app="save"><span data-i18n="save">保存</span><kbd>Ctrl+S</kbd></button>
+            <button type="button" class="menu-item" data-app="save-as"><span data-i18n="saveAs">另存为…</span><kbd>Ctrl+Shift+S</kbd></button>
+            <div class="menu-sep"></div>
+            <button type="button" class="menu-item" data-app="export-html"><span data-i18n="exportHtml">导出 HTML</span></button>
+            <button type="button" class="menu-item" data-app="export-pdf"><span data-i18n="exportPdf">导出 PDF</span></button>
+            <div class="menu-sep"></div>
+            <div class="menu-label" data-i18n="recentFiles">最近文件</div>
+            <div class="menu-recent" id="menuRecent"></div>
+          </div>
+        </div>
+
+        <!-- 编辑 -->
+        <div class="menu-root" data-mkey="e">
+          <button type="button" class="menu-title" data-i18n="menuEdit">编辑(E)</button>
+          <div class="menu dropdown" id="menuEdit">
+            <button type="button" class="menu-item" data-efwd="undo" data-mstate="undo"><span data-i18n="mUndo">撤销</span><kbd>Ctrl+Z</kbd></button>
+            <button type="button" class="menu-item" data-efwd="redo" data-mstate="redo"><span data-i18n="mRedo">重做</span><kbd>Ctrl+Y</kbd></button>
+            <div class="menu-sep"></div>
+            <button type="button" class="menu-item" data-app="find"><span data-i18n="find">查找替换</span><kbd>Ctrl+F</kbd></button>
+            <button type="button" class="menu-item" data-mact="replace"><span data-i18n="replace">替换</span><kbd>Ctrl+H</kbd></button>
+            <div class="menu-sep"></div>
+            <button type="button" class="menu-item" data-mact="select-all"><span data-i18n="selectAll">全选</span><kbd>Ctrl+A</kbd></button>
+          </div>
+        </div>
+
+        <!-- 格式 -->
+        <div class="menu-root" data-mkey="o">
+          <button type="button" class="menu-title" data-i18n="menuFormat">格式(O)</button>
+          <div class="menu dropdown" id="menuFormat">
+            <button type="button" class="menu-item" data-efwd="bold"><span data-i18n="fmtBold">加粗</span><kbd>Ctrl+B</kbd></button>
+            <button type="button" class="menu-item" data-efwd="italic"><span data-i18n="fmtItalic">斜体</span><kbd>Ctrl+I</kbd></button>
+            <button type="button" class="menu-item" data-efwd="strike"><span data-i18n="fmtStrike">删除线</span></button>
+            <button type="button" class="menu-item" data-efwd="inlinecode"><span data-i18n="fmtInlineCode">行内代码</span></button>
+            <div class="menu-sep"></div>
+            <button type="button" class="menu-item" data-efwdh="1"><span data-i18n="heading">标题</span> 1<kbd>Ctrl+1</kbd></button>
+            <button type="button" class="menu-item" data-efwdh="2"><span data-i18n="heading">标题</span> 2<kbd>Ctrl+2</kbd></button>
+            <button type="button" class="menu-item" data-efwdh="3"><span data-i18n="heading">标题</span> 3<kbd>Ctrl+3</kbd></button>
+            <button type="button" class="menu-item" data-efwdh="4"><span data-i18n="heading">标题</span> 4<kbd>Ctrl+4</kbd></button>
+            <button type="button" class="menu-item" data-efwdh="5"><span data-i18n="heading">标题</span> 5<kbd>Ctrl+5</kbd></button>
+            <button type="button" class="menu-item" data-efwdh="6"><span data-i18n="heading">标题</span> 6<kbd>Ctrl+6</kbd></button>
+            <button type="button" class="menu-item" data-efwdh="0"><span data-i18n="mBody">正文</span><kbd>Ctrl+0</kbd></button>
+            <div class="menu-sep"></div>
+            <button type="button" class="menu-item" data-efwd="ul"><span data-i18n="mUl">无序列表</span><kbd>Ctrl+Shift+7</kbd></button>
+            <button type="button" class="menu-item" data-efwd="ol"><span data-i18n="mOl">有序列表</span><kbd>Ctrl+Shift+8</kbd></button>
+            <button type="button" class="menu-item" data-efwd="task"><span data-i18n="mTask">任务列表</span><kbd>Ctrl+Shift+9</kbd></button>
+            <button type="button" class="menu-item" data-efwd="quote"><span data-i18n="mQuote">引用</span></button>
+            <button type="button" class="menu-item" data-efwd="codeblock"><span data-i18n="mCodeBlock">代码块</span></button>
+            <button type="button" class="menu-item" data-efwd="hr"><span data-i18n="mHr">分隔线</span></button>
+            <div class="menu-sep"></div>
+            <button type="button" class="menu-item" data-efwd="link"><span data-i18n="mLink">链接</span><kbd>Ctrl+K</kbd></button>
+            <button type="button" class="menu-item" data-efwd="image"><span data-i18n="mImage">图片</span></button>
+            <button type="button" class="menu-item" data-efwd="table"><span data-i18n="mTable">表格</span></button>
+          </div>
+        </div>
+
+        <!-- 视图 -->
+        <div class="menu-root" data-mkey="v">
+          <button type="button" class="menu-title" data-i18n="menuView">视图(V)</button>
+          <div class="menu dropdown" id="menuView">
+            <button type="button" class="menu-item" data-app="source"><span data-i18n="source">源码模式</span><kbd>Ctrl+/</kbd></button>
+            <div class="menu-sep"></div>
+            <button type="button" class="menu-item" data-efwd="toggle-outline"><span data-i18n="mSidebar">显示/隐藏侧栏</span></button>
+            <div class="menu-sep"></div>
+            <div class="menu-label" data-i18n="appearance">外观</div>
+            <button type="button" class="menu-item" data-set="theme:light" data-i18n="light">浅色</button>
+            <button type="button" class="menu-item" data-set="theme:dark" data-i18n="dark">深色</button>
+            <div class="menu-label" data-i18n="language">语言</div>
+            <button type="button" class="menu-item" data-set="lang:zh">简体中文</button>
+            <button type="button" class="menu-item" data-set="lang:en">English</button>
+          </div>
+        </div>
+
+        <!-- 帮助 -->
+        <div class="menu-root" data-mkey="h">
+          <button type="button" class="menu-title" data-i18n="menuHelp">帮助(H)</button>
+          <div class="menu dropdown" id="menuHelp">
+            <button type="button" class="menu-item" data-mact="shortcuts"><span data-i18n="shortcuts">快捷键列表</span></button>
+            <div class="menu-sep"></div>
+            <button type="button" class="menu-item" data-mact="about"><span data-i18n="about">关于 MD Editor</span></button>
+          </div>
+        </div>
+      </nav>
 
       <div id="filePathLabel" class="file-label">未命名</div>
       <div class="spacer"></div>
@@ -49,6 +127,25 @@
         </div>
       </div>
     </header>
+
+    <!-- ========== 主工具栏（文件 / 导出 / 视图 高频动作） ========== -->
+    <div id="appbar">
+      <div class="app-actions">
+        <button type="button" class="app-btn" data-app="new" data-i18n-title="newDoc"></button>
+        <span class="vsep"></span>
+        <button type="button" class="app-btn" data-app="open-file" data-i18n-title="openFile"></button>
+        <button type="button" class="app-btn" data-app="open-folder" data-i18n-title="openFolder"></button>
+        <span class="vsep"></span>
+        <button type="button" class="app-btn" data-app="save" data-i18n-title="save"></button>
+        <button type="button" class="app-btn" data-app="save-as" data-i18n-title="saveAs"></button>
+        <span class="vsep"></span>
+        <button type="button" class="app-btn" data-app="export-html" data-i18n-title="exportHtml"></button>
+        <button type="button" class="app-btn" data-app="export-pdf" data-i18n-title="exportPdf"></button>
+        <span class="vsep"></span>
+        <button type="button" class="app-btn" data-app="find" data-i18n-title="find"></button>
+        <button type="button" class="app-btn" data-app="source" data-i18n-title="source"></button>
+      </div>
+    </div>
 
     <main id="mainArea">
       <div id="editorHost"></div>
@@ -82,10 +179,24 @@
     </main>
   </div>
 
+  <!-- 通用模态框（关于 / 快捷键） -->
+  <div id="appModal" class="hidden">
+    <div class="modal-backdrop" data-mclose="1"></div>
+    <div class="modal-box" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <span id="modalTitle"></span>
+        <button type="button" class="modal-close" data-mclose="1" title="关闭"></button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
   <div id="appToast"></div>
 
   <script src="js/md-editor.js"></script>
   <script src="js/core.js"></script>
+  <script src="js/undo.js"></script>
+  <script src="js/rich.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

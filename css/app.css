@@ -310,7 +310,7 @@ body {
 
 /* ---------- 打印（导出 PDF） ---------- */
 @media print {
-  #appbar, .mde-toolbar, .mde-statusbar, #findBar, #tableBar, #sourceArea, #appToast { display: none !important; }
+  #appbar, #menubar, #appModal, .mde-toolbar, .mde-statusbar, #findBar, #tableBar, #sourceArea, #appToast { display: none !important; }
   #app, #mainArea, #editorHost { display: block !important; height: auto !important; overflow: visible !important; }
   .mde-scroll { overflow: visible !important; }
   .mde-editor { max-width: 100% !important; padding: 0 !important; }
@@ -321,4 +321,195 @@ body {
 @media (max-width: 900px) {
   .file-label { display: none; }
   .mde-sidebar { width: 200px; }
+}
+
+/* ---------- 数学公式（KaTeX 增强，js/rich.js） ---------- */
+.mde-math { display: inline-block; max-width: 100%; }
+.mde-math-src { display: none; }
+.mde-math-view {
+  display: inline-block;
+  max-width: 100%;
+  overflow-x: auto;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background .12s;
+}
+.mde-math-view:hover { background: rgba(127, 127, 127, .08); }
+.mde-math-block { display: block; text-align: center; margin: 10px 0; }
+.mde-math-view.mde-math-fallback,
+.mde-math-view.mde-math-fallback:hover {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: .9em;
+  color: var(--mde-text2, #656d76);
+  background: var(--mde-code-bg, #f6f8fa);
+  padding: 6px 10px;
+  white-space: pre-wrap;
+  text-align: left;
+}
+
+/* ---------- Mermaid 图表（js/rich.js） ---------- */
+.mde-mermaid-view {
+  border-top: 1px dashed var(--mde-border, #d8dee4);
+  background: var(--mde-bg, #fff);
+  padding: 12px;
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+  cursor: pointer;
+}
+.mde-mermaid-view svg { max-width: 100%; height: auto; }
+.mde-mermaid-view.mde-rendering { color: var(--mde-text3, #8b949e); font-size: 12.5px; }
+.mde-mermaid-view.mde-rendering::before { content: 'Mermaid rendering...'; }
+.mde-mermaid-view[data-state="fallback"],
+.mde-mermaid-view[data-state="error"] {
+  display: block;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  color: var(--mde-text2, #656d76);
+  white-space: pre-wrap;
+  text-align: left;
+}
+.mde-mermaid-view[data-state="error"]::before {
+  content: 'Mermaid syntax error — source below';
+  display: block;
+  color: #cf222e;
+  margin-bottom: 6px;
+  font-family: inherit;
+}
+
+/* ---------- 引用块内子结构（js/md-editor.js quote parts） ---------- */
+.mde-editor blockquote .mde-quote-text { display: block; }
+.mde-editor blockquote .mde-codeblock { margin: 6px 0; }
+
+/* ============================================================
+   菜单栏（标准桌面软件体系：文件/编辑/格式/视图/帮助）
+   ============================================================ */
+#menubar {
+  flex-shrink: 0;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  background: var(--app-bg2);
+  border-bottom: 1px solid var(--app-border);
+  user-select: none;
+}
+.menu-bar { display: flex; align-items: center; gap: 2px; }
+.menu-root { position: relative; }
+.menu-title {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  border: none;
+  background: transparent;
+  color: var(--app-text);
+  font-size: 13px;
+  font-family: inherit;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background .12s;
+}
+.menu-title:hover { background: var(--app-bg3); }
+.menu-root.open > .menu-title { background: var(--app-accent-bg); color: var(--app-accent); }
+.menu.dropdown {
+  top: calc(100% + 4px);
+  left: 0;
+  right: auto;
+  min-width: 230px;
+  max-height: min(70vh, 520px);
+}
+#menubar .menu-label { padding-top: 8px; }
+.menu-sep { height: 1px; background: var(--app-border); margin: 5px 8px; }
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.menu-item kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  color: var(--app-text3);
+  background: transparent;
+  border: none;
+  padding: 0;
+  min-width: 76px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.menu-item.disabled {
+  color: var(--app-text3);
+  opacity: .55;
+  cursor: default;
+  pointer-events: none;
+}
+.menu-item.mfocus { background: var(--app-bg3); }
+.menu-item .check {
+  display: inline-block;
+  width: 12px;
+  color: var(--app-accent);
+  flex-shrink: 0;
+}
+.menu-recent { display: block; }
+.menu-recent .menu-item { padding-left: 22px; }
+
+/* #appbar 现为纯工具栏行（下拉仍复用 .menu-wrap） */
+#appbar { height: 40px; background: var(--app-bg); }
+
+/* ============================================================
+   模态框（关于 / 快捷键）
+   ============================================================ */
+#appModal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; }
+#appModal.hidden { display: none; }
+.modal-backdrop { position: absolute; inset: 0; background: rgba(14, 17, 22, .45); }
+.modal-box {
+  position: relative;
+  width: min(560px, calc(100vw - 48px));
+  max-height: min(72vh, 640px);
+  display: flex;
+  flex-direction: column;
+  background: var(--app-bg);
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  box-shadow: 0 16px 48px rgba(14, 17, 22, .28);
+  overflow: hidden;
+}
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--app-border);
+  font-size: 14px;
+  font-weight: 600;
+}
+.modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  color: var(--app-text2);
+  border-radius: 5px;
+  cursor: pointer;
+}
+.modal-close:hover { background: var(--app-bg3); color: var(--app-text); }
+.modal-body { padding: 14px 16px; overflow-y: auto; font-size: 13.5px; line-height: 1.7; }
+.modal-body .about-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 16px; font-weight: 600; }
+.modal-body .about-meta { color: var(--app-text2); font-size: 12.5px; }
+.modal-body table.sc-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.modal-body table.sc-table td { padding: 6px 8px; border-bottom: 1px solid var(--app-border); }
+.modal-body table.sc-table td:last-child { text-align: right; }
+.modal-body table.sc-table kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  color: var(--app-text2);
+  background: var(--app-bg2);
+  border: 1px solid var(--app-border);
+  border-radius: 4px;
+  padding: 1px 6px;
 }
